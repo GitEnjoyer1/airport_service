@@ -14,6 +14,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const node_fetch_1 = __importDefault(require("node-fetch"));
 const cheerio_1 = __importDefault(require("cheerio"));
+let arrivalsFinal;
+let arrivalTime;
 const getArrivals = () => __awaiter(void 0, void 0, void 0, function* () {
     const response = yield (0, node_fetch_1.default)('https://old.bernairport.ch/iso_import/arrivals');
     const data = yield response.text();
@@ -33,7 +35,6 @@ const parseArrivals = (html) => {
     });
     return arrivals;
 };
-let arrivalsFinal;
 const fetchArrivals = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
         const data = yield getArrivals();
@@ -47,9 +48,48 @@ const fetchArrivals = () => __awaiter(void 0, void 0, void 0, function* () {
         console.error(error);
     }
 });
+function getTimeHours() {
+    var time = new Date();
+    var hours = time.getHours();
+    var minutes = time.getMinutes();
+    // Padding 0 if hour or minute is a single digit value
+    var hoursFormat = ("0" + hours).slice(-2);
+    var minutesFormat = ("0" + minutes).slice(-2);
+    var currentTime = hoursFormat + ':' + minutesFormat;
+    console.log("current time:", currentTime);
+    return currentTime;
+}
+function convertTimeToDate(timeStr) {
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes);
+    return date;
+}
+function checkArrivalTime(arrivalTime) {
+    let currentTime = getTimeHours();
+    const currentDate = convertTimeToDate(currentTime);
+    const arrivalDate = convertTimeToDate(arrivalTime);
+    const timeDifference = (currentDate.getTime() - arrivalDate.getTime()) / 1000 / 60;
+    console.log(timeDifference);
+    // Check if time difference is less than or equal to 20 minutes
+    if (timeDifference <= -20 && timeDifference >= 0) {
+        console.log("No action");
+    }
+    else {
+        console.log("Send Email");
+    }
+}
 fetchArrivals().then(() => {
-    // Now arrivalsFinal has been assigned a value, and you can use it here
-    // For example, you can call functions or perform operations that depend on arrivalsFinal
     console.log("Arrivals fetched and saved:", arrivalsFinal);
-    // Any further code that relies on arrivalsFinal should be placed here
+    arrivalsFinal.forEach(flight => {
+        let match = flight.match(/Scheduled Time: (\d{2}:\d{2})/);
+        if (match) {
+            arrivalTime = match[1];
+            console.log(arrivalTime); // string 'HH:MM' 
+        }
+        else {
+            console.log("No Data matched");
+        }
+        checkArrivalTime(arrivalTime);
+    });
 });

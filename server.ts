@@ -1,7 +1,8 @@
 import fetch from 'node-fetch';
 import cheerio, { AnyNode } from 'cheerio';
 
-
+let arrivalsFinal: string[]
+let arrivalTime: string
 
 
 const getArrivals = async () => {
@@ -28,7 +29,7 @@ const parseArrivals = (html: string | AnyNode | AnyNode[] | Buffer) => {
     return arrivals;
 };
 
-let arrivalsFinal: string[]
+
 
 const fetchArrivals = async () => {
     try {
@@ -44,8 +45,61 @@ const fetchArrivals = async () => {
     }
 };
 
+
+
+function getTimeHours() {
+
+    var time = new Date();
+
+    var hours = time.getHours();
+    var minutes = time.getMinutes();
+
+    // Padding 0 if hour or minute is a single digit value
+    var hoursFormat = ("0" + hours).slice(-2);
+    var minutesFormat = ("0" + minutes).slice(-2);
+
+    var currentTime = hoursFormat + ':' + minutesFormat;
+    console.log("current time:", currentTime);
+
+    return currentTime
+}
+
+function convertTimeToDate(timeStr: string) {
+    const [hours, minutes] = timeStr.split(":").map(Number);
+    const date = new Date();
+    date.setHours(hours, minutes);
+    return date;
+}
+
+function checkArrivalTime(arrivalTime: string) {
+    let currentTime = getTimeHours();
+    const currentDate = convertTimeToDate(currentTime);
+    const arrivalDate = convertTimeToDate(arrivalTime);
+
+    const timeDifference = (currentDate.getTime() - arrivalDate.getTime()) / 1000 / 60;
+
+    console.log(timeDifference)
+    // Check if time difference is less than or equal to 20 minutes
+    if (timeDifference <= -20 && timeDifference >= 0) {
+        console.log("No action");
+    } else {
+        console.log("Send Email");
+    }
+}
+
 fetchArrivals().then(() => {
     console.log("Arrivals fetched and saved:", arrivalsFinal);
+
+    arrivalsFinal.forEach(flight => {
+        let match = flight.match(/Scheduled Time: (\d{2}:\d{2})/);
+        if (match) {
+            arrivalTime = match[1];
+            console.log(arrivalTime);  // string 'HH:MM' 
+        }
+        else {console.log("No Data matched")}
+
+        checkArrivalTime(arrivalTime)
+    });
     
 });
 
