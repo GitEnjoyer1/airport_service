@@ -59,7 +59,6 @@ function getTimeHours() {
     var minutesFormat = ("0" + minutes).slice(-2);
 
     var currentTime = hoursFormat + ':' + minutesFormat;
-    console.log("current time:", currentTime);
 
     return currentTime
 }
@@ -80,16 +79,15 @@ function checkArrivalTime(arrivalTime: string) {
 
     console.log(timeDifference)
     // Check if time difference is less than or equal to 20 minutes
-    if (timeDifference <= -20 && timeDifference >= 0) {
-        console.log("No action");
-    } else {
+    if (timeDifference >= -25 && timeDifference < 0) {
         console.log("Send Email");
+    } else {
+        console.log("No action");
     }
 }
 
 fetchArrivals().then(() => {
-    console.log("Arrivals fetched and saved:", arrivalsFinal);
-
+    console.log("Arrivals fetched,", arrivalsFinal.length, "flights found")
     arrivalsFinal.forEach(flight => {
         let match = flight.match(/Scheduled Time: (\d{2}:\d{2})/);
         if (match) {
